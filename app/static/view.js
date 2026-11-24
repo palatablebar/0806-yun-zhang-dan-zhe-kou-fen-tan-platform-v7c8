@@ -1,6 +1,6 @@
 import {element, pretty} from './client.js';
 
-const labels = {READY:'通过', MISMATCH:'差异待复核', PENDING:'待复核', APPROVED:'已签发', HELD:'已暂缓'};
+const labels = {READY:'通过', MISMATCH:'差异待复核', PENDING:'待复核', APPROVED:'已签发', HELD:'已暂缓', ISSUABLE:'可签发'};
 const headers = ['业务分组', '输入行', '计算值', '参考值', '判定'];
 
 export function badge(status) {
@@ -52,4 +52,32 @@ export function history(items, active) {
     target.append(item);
   }
   if (!items.length) target.append(element('li','尚无执行批次'));
+}
+
+export function corrections(items, active) {
+  const target = document.querySelector('#correction-list');
+  target.replaceChildren();
+  for (const item of items) {
+    const button = element('button', item.id.slice(0,10), {'data-correction':item.id,'aria-pressed':String(item.id===active),type:'button'});
+    const entry = element('li');
+    entry.append(button, badge(item.report.status));
+    target.append(entry);
+  }
+  if (!items.length) target.append(element('li','尚无更正结算'));
+}
+
+export function correctionLines(doc) {
+  const table = document.querySelector('#correction-rows');
+  table.replaceChildren();
+  const head = element('tr');
+  head.append(...['记录键', '业务分组', '原额', '新额', '差额'].map(title => element('th', title, {scope:'col'})));
+  const body = table.createTBody();
+  for (const line of doc.lines) {
+    const tr = body.insertRow();
+    tr.append(element('td', line.record), element('td', line.case));
+    [line.before, line.after, line.delta].forEach(value => tr.insertCell().textContent = value);
+  }
+  table.createTHead().append(head);
+  const summary = document.querySelector('#correction-summary');
+  summary.textContent = `共 ${doc.summary.changed} 户入账 · 差额合计 ${doc.summary.delta_cents} 分 · ${doc.created.slice(0,19).replace('T',' ')}`;
 }

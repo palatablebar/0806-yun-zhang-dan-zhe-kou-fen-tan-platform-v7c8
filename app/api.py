@@ -1,6 +1,7 @@
 from flask import Blueprint, Response, current_app, jsonify, request
 
 from app.business import DomainIssue
+from app.correction.service import correct
 from app.evidence.render import artifact
 from app.inputs import read_input
 from app.modules.pipeline import run
@@ -44,3 +45,17 @@ def export(run_id):
             "Cache-Control": "no-store",
         },
     )
+
+
+@api.route("/runs/<run_id>/corrections", methods=["GET", "POST"])
+def corrections(run_id):
+    store = current_app.extensions["runs"]
+    if request.method == "GET":
+        store.load(run_id)
+        return jsonify(items=store.corrections_for(run_id))
+    return jsonify(correct(store, run_id, read_input()))
+
+
+@api.get("/corrections/<correction_id>")
+def correction(correction_id):
+    return jsonify(current_app.extensions["runs"].load_correction(correction_id))

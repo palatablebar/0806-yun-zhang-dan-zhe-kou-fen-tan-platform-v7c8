@@ -31,9 +31,14 @@ body.ledger {margin:0;background:var(--bg);color:var(--ink);font:var(--size)/1.5
 .ledger table {border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;min-width:360px}
 .ledger th,.ledger td {text-align:left;height:var(--row);padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
 .ledger th {position:sticky;top:0;background:var(--surface);color:var(--sub)} .ledger td:nth-child(n+2):nth-child(-n+4) {text-align:right}
-.ledger .badge {color:var(--alert);font-size:.83em;padding:2px 4px;white-space:nowrap} .ledger .badge:is([data-result="READY"],[data-result="APPROVED"]) {color:var(--accent)}
+.ledger .badge {color:var(--alert);font-size:.83em;padding:2px 4px;white-space:nowrap} .ledger .badge:is([data-result="READY"],[data-result="APPROVED"],[data-result="ISSUABLE"]) {color:var(--accent)}
 .ledger #detail {margin:0;max-height:230px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font: .91em/1.5 var(--font-num)}
 .ledger #history {list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:var(--gap);margin:0} .ledger #history li {display:flex;align-items:center}
+.ledger #corrections {margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.ledger #corrections h3 {font-size:14px;margin:0 0 6px}
+.ledger #corrections .hint {color:var(--sub);margin:0 0 8px}
+.ledger #correction-list {list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:var(--gap);margin:8px 0} .ledger #correction-list li {display:flex;align-items:center}
+.ledger #correction-summary {color:var(--sub)}
 .ledger #review {margin-top:14px;max-width:580px} .ledger textarea {display:block;width:100%;min-height:54px;cursor:text}
 .ledger .review-actions {display:flex;gap:6px;margin:8px 0}
 .ledger .statusbar {grid-area:statusbar;display:flex;gap:14px;justify-content:space-between;border-top:1px solid var(--line);padding:10px 0}

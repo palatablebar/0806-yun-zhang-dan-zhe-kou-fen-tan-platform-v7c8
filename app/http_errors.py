@@ -17,6 +17,11 @@ LABELS = {
     "UNRESOLVED_ISSUES": "存在待处理差异",
     "SAMPLE_UNKNOWN": "样例不存在",
     "STAGE_UNKNOWN": "处理阶段不存在",
+    "BASE_NOT_ISSUED": "基准批次未签发",
+    "SOURCE_CONFLICT": "来源存在冲突记录",
+    "ACCOUNT_CAP": "存在超额度账户",
+    "NO_CHANGES": "重算后无差异",
+    "CORRECTION_NOT_FOUND": "更正结算不存在",
 }
 
 
@@ -24,11 +29,23 @@ def response(error):
     code = error.code
     status = (
         404
-        if code in {"RUN_NOT_FOUND", "SAMPLE_UNKNOWN", "STAGE_UNKNOWN"}
+        if code in {"RUN_NOT_FOUND", "SAMPLE_UNKNOWN", "STAGE_UNKNOWN", "CORRECTION_NOT_FOUND"}
         else (
             409
-            if code in {"STALE_REVIEW", "RUN_FINALIZED", "UNRESOLVED_ISSUES"}
+            if code
+            in {
+                "STALE_REVIEW",
+                "RUN_FINALIZED",
+                "UNRESOLVED_ISSUES",
+                "BASE_NOT_ISSUED",
+                "SOURCE_CONFLICT",
+                "ACCOUNT_CAP",
+                "NO_CHANGES",
+            }
             else 413 if code == "FILE_TOO_LARGE" else 422
         )
     )
-    return jsonify(code=code, message=LABELS.get(code, code)), status
+    payload = {"code": code, "message": LABELS.get(code, code)}
+    if error.keys:
+        payload["records"] = error.keys
+    return jsonify(payload), status

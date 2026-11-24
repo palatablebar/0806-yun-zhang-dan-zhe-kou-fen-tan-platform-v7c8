@@ -1,5 +1,5 @@
 import {request} from './client.js';
-import {snapshot, history} from './view.js';
+import {snapshot, history, corrections, correctionLines} from './view.js';
 import {visualize} from './plots.js';
 
 const form = document.querySelector('#source');
@@ -8,9 +8,10 @@ const profile = document.querySelector('#profile');
 const status = document.querySelector('#notice');
 const detail = document.querySelector('#review');
 const evidence = document.querySelector('#evidence');
+const correctionsPanel = document.querySelector('#corrections');
 const stages = [...document.querySelectorAll('[data-stage]')];
 let stage = 'balance';
-let report, selected, batch, running = false;
+let report, selected, batch, currentCorrection, running = false;
 
 function source() {
   const data = new FormData();
@@ -31,6 +32,7 @@ function draw() {
   for (const button of stages) button.setAttribute('aria-pressed',String(button.dataset.stage===stage));
   document.querySelector('#panel-title').textContent = stages.find(button => button.dataset.stage===stage)?.textContent || '运行对账';
   detail.hidden = !batch;
+  correctionsPanel.hidden = !batch || batch.status !== 'APPROVED';
   if (batch) {
     document.querySelector('#run-status').textContent = `${batch.id.slice(0,10)} · ${batch.status} · r${batch.revision}`;
     detail.querySelector('[value="APPROVED"]').disabled = !report.balance.releasable || batch.status==='APPROVED';
@@ -39,12 +41,24 @@ function draw() {
   }
 }
 
+async function refreshCorrections() {
+  if (!batch || batch.status !== 'APPROVED') return;
+  const data = await request(`/api/runs/${batch.id}/corrections`);
+  corrections(data.items, currentCorrection);
+  if (!data.items.length) {
+    document.querySelector('#correction-rows').replaceChildren();
+    document.querySelector('#correction-summary').textContent = '';
+  }
+}
+
 function show(payload, committed = false) {
   batch = committed ? payload : null;
   report = committed ? payload.report : payload;
   detail.elements.note.value = batch?.note || '';
   selected = report.cases?.[0]?.case;
+  currentCorrection = null;
   draw();
+  refreshCorrections().catch(() => {});
 }
 
 async function refresh() {
@@ -101,6 +115,26 @@ detail.addEventListener('submit',event=>{
     const payload={status:event.submitter.value,revision:batch.revision,note:detail.elements.note.value};
     const result=await request(`/api/runs/${batch.id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     show(result,true); announce(result.status==='APPROVED'?'批次已签发':'批次已暂缓'); await refresh();
+  });
+});
+document.querySelector('#correct').addEventListener('click',()=>{
+  if (!batch) return;
+  perform(async()=>{
+    const result = await request(`/api/runs/${batch.id}/corrections`,{method:'POST',body:source()});
+    currentCorrection = result.id;
+    correctionLines(result.report);
+    announce('更正结算已生成');
+    await refreshCorrections();
+  });
+});
+document.querySelector('#correction-list').addEventListener('click',event=>{
+  const button = event.target.closest('[data-correction]');
+  if (button) perform(async()=>{
+    const result = await request(`/api/corrections/${button.dataset.correction}`);
+    currentCorrection = result.id;
+    correctionLines(result.report);
+    announce('已载入更正结算');
+    await refreshCorrections();
   });
 });
 preview(stage);

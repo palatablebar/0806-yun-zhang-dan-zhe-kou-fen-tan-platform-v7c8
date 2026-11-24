@@ -40,6 +40,14 @@
     <div class="review-actions"><button name="decision" value="HELD">暂缓</button><button class="action" name="decision" value="APPROVED">签发</button></div>
     <a id="evidence">下载复核证据</a>
   </form>
+  <section id="corrections" hidden aria-label="更正结算">
+    <h3>更正结算</h3>
+    <p class="hint">批次已签发。上传迟到修订来源后，可基于该批次生成更正结算；仅重算金额发生变化的账户入账。</p>
+    <button id="correct" type="button">基于当前来源生成更正</button>
+    <ul id="correction-list"></ul>
+    <p id="correction-summary"></p>
+    <div class="scroll"><table id="correction-rows" aria-label="更正行"></table></div>
+  </section>
 </aside>
 {% endmacro %}
 {% macro status() %}
